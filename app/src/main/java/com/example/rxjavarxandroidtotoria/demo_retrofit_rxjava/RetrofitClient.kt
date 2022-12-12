@@ -14,20 +14,6 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    //----------Call api co token -------------//
-    val interceptor = Interceptor { chain ->
-        val request: Request = chain.request()
-        val builder: Request.Builder = request.newBuilder()
-        builder.addHeader("Authorization", "") //value sẽ là tham số token
-        chain.proceed(builder.build())
-    }
-
-    val okHttpClientToken =
-        OkHttpClient.Builder().addInterceptor(interceptor)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-
     ///neu call ma khong can dung token
     private val okHttpLoggingInterceptor =
         HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
