@@ -17,7 +17,7 @@ import retrofit2.Response
 class CallApiRetrofitWithRxJavaActivity : AppCompatActivity() {
     private val btnCall: Button by lazy { findViewById<Button>(R.id.btnCall) }
     private val rcViewUser: RecyclerView by lazy { findViewById<RecyclerView>(R.id.rcViewUser) }
-    private lateinit var loadingDialog :LoadingDialog
+    private lateinit var loadingDialog: LoadingDialog
 
     private lateinit var userAdapter: UserAdapter
     private var mListUser = mutableListOf<User>()
@@ -41,12 +41,12 @@ class CallApiRetrofitWithRxJavaActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
         call.subscribe(object : Observer<List<User>> {
             override fun onSubscribe(d: Disposable) {
-               mDisposable = d
+                mDisposable = d
                 loadingDialog.startLoadingDialog()
             }
 
             override fun onNext(t: List<User>) {
-                   Toast.makeText(this@CallApiRetrofitWithRxJavaActivity, "DAng nhap thanh cong", Toast.LENGTH_SHORT).show()
+                mListUser = t as MutableList<User>
             }
 
             override fun onError(e: Throwable) {
