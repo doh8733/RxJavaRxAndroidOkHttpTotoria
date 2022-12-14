@@ -7,20 +7,17 @@ import com.example.rxjavarxandroidtotoria.R
 import com.example.rxjavarxandroidtotoria.demo_retrofit_rxjava.RetrofitClient
 import com.example.rxjavarxandroidtotoria.demo_retrofit_rxjava.User
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.functions.Function
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.schedulers.TestScheduler
-import io.reactivex.rxjava3.subscribers.DisposableSubscriber
 import java.util.concurrent.TimeUnit
-import kotlin.math.log
 
 
 class DemoOperatorRxJavaActivity : AppCompatActivity() {
-    val list = mutableListOf<User>()
+    var list = mutableListOf<User>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_demo_operator_rx_java)
@@ -43,6 +40,12 @@ class DemoOperatorRxJavaActivity : AppCompatActivity() {
         //concat() ngoài ra còn con cat còn gộp các observable lại với nhau rồi thực hiện tuần tự chúng.
         demoConcat()
         demoConcatMap()
+
+        ///fillter
+        //cho pheo tim kiem
+        demoFilter()
+        //se thu thap du lieu tu list va phat ra mot lan
+        demoToList()
 
     }
 
@@ -68,6 +71,7 @@ class DemoOperatorRxJavaActivity : AppCompatActivity() {
 
 
     private fun createOperatorFlatmap() {
+        val user = User()
         RetrofitClient.api.getAllUser().flatMap(Function<List<User>, Observable<List<User>>>() {
             try {
                 Observable.defer {
@@ -77,9 +81,6 @@ class DemoOperatorRxJavaActivity : AppCompatActivity() {
                 return@Function Observable.error(e)
             }
         })
-//            .flatMap {
-//                Observable.fromArray(it)
-//            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<List<User>> {
@@ -88,7 +89,8 @@ class DemoOperatorRxJavaActivity : AppCompatActivity() {
 
                 override fun onNext(t: List<User>) {
                     //loc nhung user cos id lon hon 50
-                    Log.e("LOG", "onNext: $t", )
+                    Log.e("LOG", "onNext: $t")
+                    list = t as MutableList<User>
 
                 }
 
@@ -102,6 +104,8 @@ class DemoOperatorRxJavaActivity : AppCompatActivity() {
 
             })
     }
+
+
 
     private fun createObservable(data: Int): Observable<Int> {
         return Observable.just(data)
@@ -216,16 +220,69 @@ class DemoOperatorRxJavaActivity : AppCompatActivity() {
         data.add(5)
         return Observable.just(data)
     }
+    private fun getDataFromApi() :Observable<List<User>>{
+        var l :MutableList<User> = ArrayList()
+        RetrofitClient.api.getAllUser()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.io())
+            .subscribe(object : Observer<List<User>>{
+            override fun onSubscribe(d: Disposable) {
+                d
+            }
+
+            override fun onNext(t: List<User>) {
+                l = t as MutableList<User>
+            }
+
+            override fun onError(e: Throwable) {
+
+            }
+
+            override fun onComplete() {
+                Log.e("TAG", "onComplete: $l")
+            }
+
+        })
+        return Observable.just(l)
+    }
+    private fun getDataFromLocal():Observable<List<User>>{
+        val listii :MutableList<User> = ArrayList()
+        listii.add(User("123213",0,"dasdadad",323))
+        listii.add(User("123213",12,"dasda1231dad",13))
+        listii.add(User("12243213",13,"daserdadad",32))
+        listii.add(User("123213",14,"dasdadad",232))
+        listii.add(User("12wqe3213",13,"dasdasdaad123ad",32323))
+        return Observable.just(listii)
+    }
+    private fun demoFilter(){
+        Observable.just("HUY","SS","","0","23").filter{s:String -> s.length != 2}.doOnNext {
+            Log.e("LEGHT", "demoFilter: $it")
+        }.toList()
+            .subscribe(System.out::println)
+    }
+
+    private fun demoToList(){
+        Observable.just(
+            "Alpha1", "Beta2", "Gamma3", "Delta2",
+            "Epsilon4"
+        )
+            .toList()
+            .subscribe { s: List<String> ->
+                println(
+                    "Received: $s"
+                )
+            }
+    }
 
     private fun demoConcat() {
-        val list = mutableListOf<Int>()
-        Observable.concat(Observable.just(getDataServer(), getDataLocal()))
-            .subscribe(object : Observer<List<Int>> {
+        val list = mutableListOf<User>()
+        Observable.concat(Observable.just(getDataFromApi(), getDataFromLocal()))
+            .subscribe(object : Observer<List<User>> {
                 override fun onSubscribe(d: Disposable) {
                     Log.e("CONCAT", "onSubscribe: OK___________")
                 }
 
-                override fun onNext(t: List<Int>) {
+                override fun onNext(t: List<User>) {
                     list.addAll(t)
                 }
 
